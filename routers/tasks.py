@@ -64,17 +64,37 @@ def create_task(task: TaskCreate):
 
 @router.put("/{task_id}", summary="Update a task", response_model=Task)
 def update_task(task_id: int, task: TaskUpdate):
-    for t in database.tasks_db:
-        if t["id"] == task_id:
-            t["title"] = task.title
-            t["done"] = task.done
-            return t
-    raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    conn = database.get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(
+        "UPDATE tasks SET title = ?, done = ? WHERE id = ?",
+        (task.title, 1 if task.done else 0, task_id)
+    )
+    
+    if cursor.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Task not found")
+        
+    conn.commit()
+    conn.close()
+    
+    return {
+        "id": task_id,
+        "title": task.title,
+        "done": task.done
+    }
 
 @router.delete("/{task_id}", summary="Delete a task", status_code=status.HTTP_204_NO_CONTENT)
 def delete_task(task_id: int):
-    for i, t in enumerate(database.tasks_db):
-        if t["id"] == task_id:
-            database.tasks_db.pop(i)
-            return
-    raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    conn = database.get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    
+    if cursor.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Task not found")
+        
+    conn.commit()
+    conn.close()
