@@ -50,7 +50,7 @@ SELECT * FROM tasks WHERE done = 1;
 ```
 *Result: It returned only the tasks that were marked as completed.*
 
-*(Note: Add your screenshot of `tasks.db` open in DB Browser for SQLite here before submitting!)*
+<img width="1912" height="1078" alt="image" src="https://github.com/user-attachments/assets/f130b64e-bdf1-46d5-9ac2-1f14ed74460a" />
 
 ## AI vs Me (Stage 6)
 
