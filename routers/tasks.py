@@ -45,14 +45,22 @@ def get_task(task_id: int):
 
 @router.post("", summary="Create a new task", status_code=status.HTTP_201_CREATED, response_model=Task)
 def create_task(task: TaskCreate):
-    new_task = {
-        "id": database.next_id,
+    conn = database.get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute(
+        "INSERT INTO tasks (title, done) VALUES (?, ?)", 
+        (task.title, 1 if task.done else 0)
+    )
+    new_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    
+    return {
+        "id": new_id,
         "title": task.title,
         "done": task.done
     }
-    database.next_id += 1
-    database.tasks_db.append(new_task)
-    return new_task
 
 @router.put("/{task_id}", summary="Update a task", response_model=Task)
 def update_task(task_id: int, task: TaskUpdate):
