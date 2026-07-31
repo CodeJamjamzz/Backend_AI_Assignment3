@@ -15,10 +15,10 @@ def get_tasks(done: Optional[bool] = None, search: Optional[str] = None):
     params = []
     
     if done is not None:
-        conditions.append("done = ?")
-        params.append(1 if done else 0)
+        conditions.append("done = %s")
+        params.append(bool(done))
     if search:
-        conditions.append("title LIKE ?")
+        conditions.append("title LIKE %s")
         params.append(f"%{search}%")
         
     if conditions:
@@ -34,7 +34,7 @@ def get_tasks(done: Optional[bool] = None, search: Optional[str] = None):
 def get_task(task_id: int):
     conn = database.get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
+    cursor.execute("SELECT * FROM tasks WHERE id = %s", (task_id,))
     row = cursor.fetchone()
     conn.close()
     

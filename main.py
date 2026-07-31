@@ -49,9 +49,9 @@ def get_stats():
     conn = database.get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM tasks")
-    total = cursor.fetchone()[0]
-    cursor.execute("SELECT COUNT(*) FROM tasks WHERE done = 1")
-    done_count = cursor.fetchone()[0]
+    total = cursor.fetchone()['count']
+    cursor.execute("SELECT COUNT(*) FROM tasks WHERE done = TRUE")
+    done_count = cursor.fetchone()['count']
     conn.close()
     
     open_count = total - done_count
