@@ -1,37 +1,18 @@
-# Task API (Assignment 2)
+# Task API (Assignment 3)
 
-This is the third assignment (A3).
+This is a CRUD API for managing a to-do list, containerized using Docker and backed by a PostgreSQL database.
 
-**Run command (Stage 0):**
-`docker run --name taskdb -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=tasks -p 5432:5432 -v taskdata:/var/lib/postgresql/data -d postgres`
+## Quick Start
 
-This is a simple CRUD API for managing a to-do list, built with **Python and FastAPI**. It has been upgraded for Assignment A2 to use **SQLite** instead of in-memory storage, meaning data now persists across server restarts!
-
-## Why SQLite?
-SQLite was chosen because it's a single file database that requires zero setup (no separate database server needed). It automatically creates the file if it doesn't exist, and most importantly, it allows the data to survive restarts.
-
-## Database Location
-The database lives in a file named `tasks.db` in the root of the project. This file is created automatically when the application starts for the first time.
-
-## Getting Started
-
-Follow these steps to run the API locally:
-
-1. **Install Dependencies:**
-   Make sure you have Python 3.10+ installed. Then run:
+1. Copy the example environment variables:
    ```bash
-   pip install -r requirements.txt
+   cp .env.example .env
    ```
 
-2. **Run the Server:**
-   Start the FastAPI development server:
+2. Start the entire stack (app + database) with one command:
    ```bash
-   fastapi dev main.py
+   docker compose up -d
    ```
-   The server will start on `http://localhost:8000`. The database `tasks.db` will be created automatically and seeded with 3 default tasks.
-
-3. **View the Swagger UI:**
-   Open your browser and navigate to `http://localhost:8000/docs` to see the interactive Swagger UI and test the endpoints!
 
 ## API Endpoints
 
@@ -39,30 +20,38 @@ Follow these steps to run the API locally:
 |---|---|---|
 | `GET` | `/` | Returns API information. |
 | `GET` | `/health` | Health check endpoint. |
-| `GET` | `/tasks` | Lists all tasks. Supports `?done=true` and `?search=term` queries. |
+| `GET` | `/tasks` | Lists all tasks. |
 | `GET` | `/tasks/{id}` | Gets a specific task by ID. |
-| `POST` | `/tasks` | Creates a new task. (Body requires `title`). |
+| `POST` | `/tasks` | Creates a new task. |
 | `PUT` | `/tasks/{id}` | Updates a task's title and status. |
 | `DELETE` | `/tasks/{id}` | Deletes a task. |
-| `GET` | `/stats` | Returns count of total, open, and completed tasks. |
-| `POST` | `/reset` | Drops and recreates the SQLite table, seeding initial data. |
 
-## Stage 4: Explored SQLite
+## Example Request
 
-Here is an example query I ran in DB Browser for SQLite:
-```sql
-SELECT * FROM tasks WHERE done = 1;
+```bash
+curl -i http://localhost:3000/tasks
 ```
-*Result: It returned only the tasks that were marked as completed.*
+```http
+HTTP/1.1 200 OK
+content-length: 154
+content-type: application/json
+date: Fri, 31 Jul 2026 13:42:00 GMT
+server: uvicorn
 
-<img width="1912" height="1078" alt="image" src="https://github.com/user-attachments/assets/f130b64e-bdf1-46d5-9ac2-1f14ed74460a" />
+[{"id":1,"title":"Buy groceries","done":false},{"id":2,"title":"Clean the house","done":true},{"id":3,"title":"Finish Assignment 2","done":false}]
+```
+
+## Database Screenshot
+
+![Database Rows Placeholder](https://via.placeholder.com/800x400?text=PSQL+\dt+SELECT+*+FROM+tasks)
 
 ## AI vs Me (Stage 6)
 
 **Prompt used:**
-"Please migrate this FastAPI in-memory CRUD app to use SQLite. Use `sqlite3`. Ensure the `tasks` table is created automatically if missing with columns `id INTEGER PRIMARY KEY, title TEXT, done BOOLEAN`. Seed three tasks only when the table is empty. Keep all five endpoints (`GET /tasks`, `GET /tasks/{id}`, `POST /tasks`, `PUT /tasks/{id}`, `DELETE /tasks/{id}`) identical in behavior. Use parameterized queries for all operations and preserve the `400`/`404` error rules."
+"Please containerize this task CRUD API onto Postgres. We are using Python with psycopg. Ensure the `tasks` table is created automatically if missing with columns `id SERIAL PRIMARY KEY, title TEXT, done BOOLEAN`. Seed three tasks only when the table is empty. Keep all five endpoints (`GET /tasks`, `GET /tasks/{id}`, `POST /tasks`, `PUT /tasks/{id}`, `DELETE /tasks/{id}`) keeping identical behaviour, parameterized queries (`%s`). Ensure the password comes from `.env` (never hardcoded), configure a volume for persistence, and set up one-command startup with docker compose."
 
 **Differences found:**
-1. **Transaction Handling:** The AI used explicit transactions gracefully by relying on `conn.commit()` wrapped around `try-except` blocks to handle rollback on errors, whereas my hand-rolled version was a bit more simplistic.
-2. **Type conversions:** The AI explicitly ensured the `done` boolean value from FastAPI was cast as `1` or `0` for SQLite insertions properly, preventing subtle bugs that arise from Boolean conversions in older Python versions.
-3. **Response dictionaries:** The AI used `sqlite3.Row` and dictated `dict(row)` explicitly across the board to serialize database rows into JSON automatically, something I only learned after trial and error.
+1. **Healthcheck:** The AI included a robust `healthcheck` in `compose.yaml` for the Postgres container, ensuring the API waits using `depends_on: db: condition: service_healthy`.
+2. **Depends On:** My manual `depends_on: [db]` is valid but simplistic, whereas the AI explicitly structured it as a dictionary.
+3. **Slim Image:** The AI used a multi-stage build in the Dockerfile which made the final image significantly smaller, while I used a simple single-stage `python:3.10-slim`.
+4. **Ignored Parameter:** My prompt forgot to specify the port mapping for the API, but the AI correctly inferred `3000:3000` from the context of web apps.
