@@ -1,5 +1,10 @@
 # Task API (Assignment 2)
 
+This is the third assignment (A3).
+
+**Run command (Stage 0):**
+`docker run --name taskdb -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=tasks -p 5432:5432 -v taskdata:/var/lib/postgresql/data -d postgres`
+
 This is a simple CRUD API for managing a to-do list, built with **Python and FastAPI**. It has been upgraded for Assignment A2 to use **SQLite** instead of in-memory storage, meaning data now persists across server restarts!
 
 ## Why SQLite?
