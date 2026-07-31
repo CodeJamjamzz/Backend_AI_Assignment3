@@ -43,7 +43,8 @@ server: uvicorn
 
 ## Database Screenshot
 
-![Database Rows Placeholder](https://via.placeholder.com/800x400?text=PSQL+\dt+SELECT+*+FROM+tasks)
+<img width="1403" height="608" alt="Screenshot 2026-07-31 235420" src="https://github.com/user-attachments/assets/a3f4e052-a692-4fcf-9ba3-40e12d4a2f44" />
+
 
 ## AI vs Me (Stage 6)
 
