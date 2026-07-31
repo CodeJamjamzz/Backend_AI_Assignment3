@@ -3,17 +3,27 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from routers import tasks
 import database
+import redis
 
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     database.init_db()
+    
+    # Ping Redis on startup
+    try:
+        r = redis.Redis(host='redis', port=6379, decode_responses=True)
+        r.ping()
+        print("Successfully connected to Redis and pinged!")
+    except Exception as e:
+        print(f"Failed to connect to Redis: {e}")
+        
     yield
 
 app = FastAPI(
     title="Task API",
-    description="A simple SQLite CRUD API for tasks. Data survives server restart.",
+    description="A simple PostgreSQL CRUD API for tasks. Data survives server restart.",
     version="1.0",
     lifespan=lifespan
 )
