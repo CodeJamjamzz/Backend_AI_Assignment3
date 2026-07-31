@@ -49,18 +49,14 @@ def create_task(task: TaskCreate):
     cursor = conn.cursor()
     
     cursor.execute(
-        "INSERT INTO tasks (title, done) VALUES (?, ?)", 
-        (task.title, 1 if task.done else 0)
+        "INSERT INTO tasks (title, done) VALUES (%s, %s) RETURNING *", 
+        (task.title, bool(task.done))
     )
-    new_id = cursor.lastrowid
+    new_task = cursor.fetchone()
     conn.commit()
     conn.close()
     
-    return {
-        "id": new_id,
-        "title": task.title,
-        "done": task.done
-    }
+    return dict(new_task)
 
 @router.put("/{task_id}", summary="Update a task", response_model=Task)
 def update_task(task_id: int, task: TaskUpdate):
@@ -68,29 +64,26 @@ def update_task(task_id: int, task: TaskUpdate):
     cursor = conn.cursor()
     
     cursor.execute(
-        "UPDATE tasks SET title = ?, done = ? WHERE id = ?",
-        (task.title, 1 if task.done else 0, task_id)
+        "UPDATE tasks SET title = %s, done = %s WHERE id = %s RETURNING *",
+        (task.title, bool(task.done), task_id)
     )
+    updated_task = cursor.fetchone()
     
-    if cursor.rowcount == 0:
+    if updated_task is None:
         conn.close()
         raise HTTPException(status_code=404, detail="Task not found")
         
     conn.commit()
     conn.close()
     
-    return {
-        "id": task_id,
-        "title": task.title,
-        "done": task.done
-    }
+    return dict(updated_task)
 
 @router.delete("/{task_id}", summary="Delete a task", status_code=status.HTTP_204_NO_CONTENT)
 def delete_task(task_id: int):
     conn = database.get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    cursor.execute("DELETE FROM tasks WHERE id = %s", (task_id,))
     
     if cursor.rowcount == 0:
         conn.close()
